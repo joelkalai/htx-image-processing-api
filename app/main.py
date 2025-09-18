@@ -1,4 +1,5 @@
 import os, uuid, threading, queue
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +17,43 @@ from app.processing import validate_upload, secure_ext, ORIGINALS_DIR, process_i
 # Ensure DB tables exist
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title=settings.APP_NAME)
+# Simple in-process job queue + worker thread
+job_q: "queue.Queue[str]" = queue.Queue()
+worker_thread = None
+
+def worker():
+    from app.database import SessionLocal  # local to avoid circular import with get_db
+    db = SessionLocal()
+    logger.info("Background worker started.")
+    try:
+        while True:
+            try:
+                record_id = job_q.get(timeout=1)  # Add timeout to allow checking for shutdown
+                if record_id is None:
+                    break
+                from app.processing import process_image
+                process_image(db, record_id)
+                job_q.task_done()
+            except queue.Empty:
+                continue
+    finally:
+        db.close()
+        logger.info("Background worker stopped.")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    global worker_thread
+    worker_thread = threading.Thread(target=worker, daemon=True)
+    worker_thread.start()
+    logger.info("Started background worker thread")
+    yield
+    # Shutdown
+    job_q.put(None)  # Signal worker to stop
+    if worker_thread:
+        worker_thread.join(timeout=5)
+
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 # CORS (adjust as needed)
 app.add_middleware(
@@ -26,27 +63,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Simple in-process job queue + worker thread
-job_q: "queue.Queue[str]" = queue.Queue()
-
-def worker():
-    from app.database import SessionLocal  # local to avoid circular import with get_db
-    db = SessionLocal()
-    logger.info("Background worker started.")
-    try:
-        while True:
-            record_id = job_q.get()
-            if record_id is None:
-                break
-            from app.processing import process_image
-            process_image(db, record_id)
-            job_q.task_done()
-    finally:
-        db.close()
-
-t = threading.Thread(target=worker, daemon=True)
-t.start()
 
 def build_thumb_urls(image_id: str) -> ThumbnailURLs:
     base = settings.BASE_URL.rstrip("/")

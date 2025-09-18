@@ -13,6 +13,9 @@ The fastest way to run this application is using Docker:
 git clone <repository-url>
 cd htx-image-processing-api
 
+# Copy environment configuration
+cp .env.example .env
+
 # Start with Docker Compose (recommended)
 docker-compose up --build
 
@@ -22,6 +25,8 @@ docker run -p 8000:8000 -v $(pwd)/storage:/app/storage htx-image-api
 ```
 
 The API will be available at http://localhost:8000
+
+> **⚠️ First Run Note**: The first image processing will take **60-120 seconds** as the AI model (~1GB) downloads. Subsequent images process in **10-15 seconds**.
 
 ## ✨ Features
 
@@ -108,6 +113,9 @@ curl http://localhost:8000/api/images/550e8400-e29b-41d4-a716-446655440000
 ### Option 1: Docker (Recommended)
 
 ```bash
+# Copy environment configuration
+cp .env.example .env
+
 # Using Docker Compose
 docker-compose up --build
 
@@ -225,7 +233,11 @@ This implementation fulfills all requirements from the HTX assessment:
 
 1. **Python Version**: Requires Python 3.12 with lzma support. Use Docker if you encounter issues with local Python installation.
 
-2. **First Run**: The AI model will be downloaded on first use (~1GB). Ensure you have internet connectivity and sufficient disk space.
+2. **First Run & Processing Times**:
+   - The AI model will be downloaded on first use (~1GB). Ensure you have internet connectivity and sufficient disk space.
+   - **First image**: Takes 60-120 seconds (includes model download)
+   - **Subsequent images**: Process in 10-15 seconds
+   - The model is cached after first download, so restarts don't require re-downloading
 
 3. **Storage**: Uploaded images and thumbnails are stored in the `storage/` directory. This can be mounted as a volume in Docker for persistence.
 

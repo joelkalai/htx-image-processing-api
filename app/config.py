@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     BASE_URL: str = "http://localhost:8000"
     DATABASE_URL: str = "sqlite:///./data.db"
-    CAPTION_MODEL: str = "disabled"  # e.g., 'nlpconnect/vit-gpt2-image-captioning'
+    CAPTION_MODEL: str = "Salesforce/blip-image-captioning-base"  # e.g., 'nlpconnect/vit-gpt2-image-captioning'
 
     class Config:
         env_file = ".env"

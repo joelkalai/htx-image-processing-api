@@ -28,8 +28,8 @@ COPY app/ ./app/
 COPY tests/ ./tests/
 COPY .env.example .env
 
-# Create storage directories
-RUN mkdir -p storage/originals storage/thumbs/small storage/thumbs/medium
+# Create storage and database directories
+RUN mkdir -p storage/originals storage/thumbs/small storage/thumbs/medium db
 
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && \

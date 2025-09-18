@@ -9,14 +9,12 @@ services:
     volumes:
       # Persist storage across container restarts
       - ./storage:/app/storage
-      # Persist database
-      - ./data.db:/app/data.db
-      # Allow .env customization (optional, remove if using defaults)
-      - ./.env:/app/.env:ro
-    environment:   
+      # Persist database using a named volume (avoids permission issues)
+      - htx-db:/app/db
+    environment:
       # Override these if needed
       - CAPTION_MODEL=${CAPTION_MODEL:-Salesforce/blip-image-captioning-base}
-      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data.db}
+      - DATABASE_URL=sqlite:///./db/data.db
       - BASE_URL=${BASE_URL:-http://localhost:8000}
     restart: unless-stopped
     healthcheck:
@@ -25,3 +23,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  htx-db:
