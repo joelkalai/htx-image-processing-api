@@ -13,6 +13,9 @@ The fastest way to run this application is using Docker:
 git clone <repository-url>
 cd htx-image-processing-api
 
+# Copy over environment variables
+cp .env.example .env
+
 # Start with Docker Compose (recommended)
 docker-compose up --build
 
