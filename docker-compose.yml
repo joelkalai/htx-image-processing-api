@@ -13,7 +13,7 @@ services:
       - ./data.db:/app/data.db
       # Allow .env customization (optional, remove if using defaults)
       - ./.env:/app/.env:ro
-    environment:
+    environment:   
       # Override these if needed
       - CAPTION_MODEL=${CAPTION_MODEL:-Salesforce/blip-image-captioning-base}
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data.db}
